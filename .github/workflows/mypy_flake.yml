@@ -17,7 +17,6 @@ jobs:
       run: |
         pip install mypy
         python -m pip install types-emoji
-        mypy --install-types
         mypy --ignore-missing-imports $(git ls-files '*.py')
         pip install flake8
         flake8  $(git ls-files '*.py')
