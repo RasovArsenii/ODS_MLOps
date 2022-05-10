@@ -16,6 +16,7 @@ jobs:
     - name: Analysing the code
       run: |
         pip install mypy
+        mypy --install-types
         mypy --ignore-missing-imports $(git ls-files '*.py')
         pip install flake8
         flake8  $(git ls-files '*.py')
