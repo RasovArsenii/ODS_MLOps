@@ -7,11 +7,9 @@ from typing import Optional
 
 def handle_unk_tokens(text: str) -> str:
     """Replaces '₽' with 'р' and removes unknown symbols
-
     Parameters
     ----------
     text : str
-
     Returns
     -------
     str
@@ -43,11 +41,9 @@ def handle_unk_tokens(text: str) -> str:
 
 def handle_positive_emojis(text: str) -> str:
     """Replaces positive emojies with `:)` phrase
-
     Parameters
     ----------
     text : str
-
     Returns
     -------
     str
@@ -79,11 +75,9 @@ def handle_positive_emojis(text: str) -> str:
 
 def handle_negative_emojis(text: str) -> str:
     """Replaces negative emojies with `:(` phrase
-
     Parameters
     ----------
     text : str
-
     Returns
     -------
     str
@@ -113,11 +107,9 @@ def handle_negative_emojis(text: str) -> str:
 
 def handle_smiles(text: str) -> str:
     """Unify smiles by replacing them with `:)` and `:(` phrases
-
     Parameters
     ----------
     text : str
-
     Returns
     -------
     str
@@ -147,14 +139,12 @@ def handle_smiles(text: str) -> str:
 def handle(text: str, do_sentiment: Optional[bool] = True) -> str:
     """Unify smiles and emojies by replacing them with `:)`
     and `:(` or `баМаОаДаЖаИ` phrases
-
     Parameters
     ----------
     text : str
     do_sentiment : Optional[bool], optional
         defines the need to devide emojies into positive
         and negative, by default False
-
     Returns
     -------
     str
