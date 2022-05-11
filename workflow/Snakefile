@@ -1,0 +1,13 @@
+configfile: "workflow/config.yaml"
+
+rule all:
+    input:
+        "data/processed/data_cleaned.csv"
+
+rule cleaning:
+    input:
+        "data/raw/data.csv"
+    output:
+        "data/processed/data_cleaned.csv"
+    shell:
+        "python -m src.data.handle_symbols {input} {output}"

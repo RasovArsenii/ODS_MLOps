@@ -16,6 +16,7 @@ jobs:
     - name: Analysing the code
       run: |
         pip install mypy
-        mypy $(git ls-files '*.py')
+        python -m pip install types-emoji
+        mypy --ignore-missing-imports $(git ls-files 'src/*.py')
         pip install flake8
-        flake8  $(git ls-files '*.py')
+        flake8  $(git ls-files 'src/*.py')
