@@ -1,0 +1,8 @@
+[core]
+    remote = myremote
+    autostage = true
+['remote "myremote"']
+    url = s3://ods-mlops-dvc-storage
+    endpointurl = https://storage.yandexcloud.net
+    access_key_id = YCAJERxueNR5kPLdRrR3dcxqA
+    secret_access_key = YCPb7lYFMykcmkFInWqLJI-zg8OpCL2TKvIvDQSw
