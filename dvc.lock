@@ -1,0 +1,15 @@
+schema: '2.0'
+stages:
+  cleaning:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/data.csv' 'data/processed/data_cleaned.csv'
+    deps:
+    - path: data/raw/data.csv
+      md5: 8b306fc266240a1d0d4d1d9c393f8a5a
+      size: 1255588
+    - path: src/data/handle_symbols.py
+      md5: 2da1dd886e6db6abbf0c023bb2b64057
+      size: 5865
+    outs:
+    - path: data/processed/data_cleaned.csv
+      md5: a465d63b5e25e492d48abcaab1395342
+      size: 1218890

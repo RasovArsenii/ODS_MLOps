@@ -1,0 +1,9 @@
+stages:
+
+  cleaning:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/data.csv' 'data/processed/data_cleaned.csv'
+    deps:
+      - 'data/raw/data.csv'
+      - 'src/data/handle_symbols.py'
+    outs:
+      - 'data/processed/data_cleaned.csv'
