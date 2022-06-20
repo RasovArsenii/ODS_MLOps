@@ -24,6 +24,7 @@ np.random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
 
+
 def get_ft_embedding(txt, ft, max_len):
     tokens = word_tokenize(txt, language='russian')
 
@@ -35,7 +36,8 @@ def get_ft_embedding(txt, ft, max_len):
 
     return np.stack(map(ft.get_vector, tokens))
 
-def evaluate(data, model, criterion, device, batch_size, best_f1=False):
+
+def evaluate(data, model, criterion, device, batch_size):
     """
     Evaluation, return accuracy and loss
     """
@@ -65,6 +67,7 @@ def evaluate(data, model, criterion, device, batch_size, best_f1=False):
         'loss': '{:<6.4f}'.format(total_loss / len(data))
     }
 
+
 def predict_proba(data, model, device, batch_size):
     """
     Prediction, return numpy matrix of predictions (batch_size * n_classes)
@@ -82,6 +85,7 @@ def predict_proba(data, model, device, batch_size):
     y_pred = np.asarray(y_pred)
     return y_pred
 
+
 class ModuleParallel(nn.Module):
     """
     Execute multiple modules on the same input and concatenate the results
@@ -91,16 +95,17 @@ class ModuleParallel(nn.Module):
         self.modules_ = nn.ModuleList(modules)
         self.axis = axis
 
-    def forward(self, input):
-        return torch.cat([m(input) for m in self.modules_], self.axis)
+    def forward(self, inp):
+        return torch.cat([m(inp) for m in self.modules_], self.axis)
 
 
 class GlobalMaxPooling(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, input):
-        return input.max(2)[0]
+    def forward(self, inp):
+        return inp.max(2)[0]
+
 
 class EarlyStopping:
     """
@@ -238,11 +243,11 @@ def train_pipeline(
         ft_path: str,
 ):
     ft = compress_fasttext.models.CompressedFastTextKeyedVectors.load(ft_path)
-    EMBED_DIM = ft.vector_size
+    embed_dim = ft.vector_size
 
     train = pd.read_csv(train_path).reset_index(drop=True)
     valid = pd.read_csv(valid_path).reset_index(drop=True)
-    MAX_LEN = max(train.text.apply(lambda x: len(word_tokenize(x))))
+    max_len = max(train.text.apply(lambda x: len(word_tokenize(x))))
 
     all_labels = sorted(train.intent.unique())
     lb = LabelBinarizer()
@@ -250,8 +255,8 @@ def train_pipeline(
     y_train = lb.transform(train["intent"].values)
     y_val = lb.transform(valid["intent"].values)
 
-    X_train_encoded = np.stack(train["text"].apply(lambda x: get_ft_embedding(x, ft, MAX_LEN)))
-    X_val_encoded = np.stack(valid["text"].apply(lambda x: get_ft_embedding(x, ft, MAX_LEN)))
+    X_train_encoded = np.stack(train["text"].apply(lambda x: get_ft_embedding(x, ft, max_len)))
+    X_val_encoded = np.stack(valid["text"].apply(lambda x: get_ft_embedding(x, ft, max_len)))
 
     train_data = TensorDataset(torch.FloatTensor(X_train_encoded), torch.FloatTensor(y_train))
     val_data = TensorDataset(torch.FloatTensor(X_val_encoded), torch.FloatTensor(y_val))
@@ -260,7 +265,7 @@ def train_pipeline(
     device = 'cpu'
     model = CNNTextClassifier(
         num_classes=y_train.shape[1],
-        embed_dim=EMBED_DIM,
+        embed_dim=embed_dim,
         kernel_sizes=[1, 2],
         filters=[10, 10],
         dense_sizes=[200],
@@ -269,10 +274,18 @@ def train_pipeline(
         trainable_word_vectors=False
     )
 
-    optimizer = optim.Adam([p for p in model.parameters() if p.requires_grad],
-                            lr=0.00035)
+    optimizer = optim.Adam(
+        [p for p in model.parameters() if p.requires_grad],
+        lr=0.00035
+    )
     criterion = nn.BCEWithLogitsLoss(reduction='sum')   # sigmoid
-    scheduler  = optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.00035, max_lr=0.015, mode='triangular2', cycle_momentum=False)
+    scheduler = optim.lr_scheduler.CyclicLR(
+        optimizer,
+        base_lr=0.00035,
+        max_lr=0.015,
+        mode='triangular2',
+        cycle_momentum=False
+    )
     early_stopping = EarlyStopping(mode='max', patience=10)
     best_valid_f1 = 0
 
