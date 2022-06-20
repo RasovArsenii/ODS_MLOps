@@ -1,9 +1,29 @@
 stages:
 
-  cleaning:
-    cmd: python 'src/data/handle_symbols.py' 'data/raw/data.csv' 'data/processed/data_cleaned.csv'
+  cleaning train:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/train_88-6-6.xlsx' 'data/processed/train_cleaned.csv'
     deps:
-      - 'data/raw/data.csv'
+      - 'data/raw/train_88-6-6.xlsx'
       - 'src/data/handle_symbols.py'
     outs:
-      - 'data/processed/data_cleaned.csv'
+      - 'data/processed/train_cleaned.csv'
+
+  cleaning valid:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/validate_88-6-6.xlsx' 'data/processed/valid_cleaned.csv'
+    deps:
+      - 'data/raw/validate_88-6-6.xlsx'
+      - 'src/data/handle_symbols.py'
+    outs:
+      - 'data/processed/valid_cleaned.csv'
+
+  train model:
+    cmd: python 'src/models/train_model.py' 'data/processed/train_cleaned.csv' 'data/processed/valid_cleaned.csv' 'models/intents_cnn.pt' 'data/processed/intents.txt' 'data/processed/metrics.json' 'models/compressed_ft_native_300_ru_twitter_nltk_word_tokenize.bin'
+    deps:
+      - 'data/processed/train_cleaned.csv'
+      - 'data/processed/valid_cleaned.csv'
+      - 'models/compressed_ft_native_300_ru_twitter_nltk_word_tokenize.bin'
+      - 'src/models/train_model.py'
+    outs:
+      - 'models/intents_cnn.pt'
+      - 'data/processed/intents.txt'
+      - 'data/processed/metrics.json'
