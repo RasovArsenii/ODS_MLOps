@@ -305,8 +305,8 @@ def train_pipeline(
 
             optimizer.step()
 
-        train_metrics = evaluate(train_data, lb, model, criterion, device, batch_size)
-        val_metrics = evaluate(val_data, lb, model, criterion, device, batch_size)
+        train_metrics = evaluate(train_data, model, criterion, device, batch_size)
+        val_metrics = evaluate(val_data, model, criterion, device, batch_size)
 
         if val_metrics['f1_val'] > best_valid_f1:
             best_valid_f1 = val_metrics['f1_val']
