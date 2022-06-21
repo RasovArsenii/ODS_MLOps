@@ -352,9 +352,9 @@ def train_pipeline(
 
             optimizer.step()
 
-        train_metrics = evaluate(
-            train_data, model, criterion, device, batch_size
-        )
+        # train_metrics = evaluate(
+        #     train_data, model, criterion, device, batch_size
+        # )
         val_metrics = evaluate(
             val_data, model, criterion, device, batch_size
         )
