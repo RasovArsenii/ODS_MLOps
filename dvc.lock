@@ -67,8 +67,8 @@ stages:
       md5: 60dbf93c1c9c9dd5b2dd1f2b2a86ec00
       size: 37915960
     - path: src/models/train_model.py
-      md5: 8d3f36360e6b83d21d44f93e20531759
-      size: 11280
+      md5: e3247bd3bafaa3d4bc7e08709a3c4257
+      size: 11982
     outs:
     - path: data/processed/intents.txt
       md5: 3073bd3b8e33cb98deac55df1a8ca451

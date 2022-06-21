@@ -1,0 +1,15 @@
+artifact_uri: file:///Users/RasovArsenii/Desktop/ODS_MLOps/mlruns/1/398ef3a947644c6c9a1d9b2a2690cda5/artifacts
+end_time: 1655832107190
+entry_point_name: ''
+experiment_id: '1'
+lifecycle_stage: active
+name: ''
+run_id: 398ef3a947644c6c9a1d9b2a2690cda5
+run_uuid: 398ef3a947644c6c9a1d9b2a2690cda5
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1655832107165
+status: 3
+tags: []
+user_id: RasovArsenii

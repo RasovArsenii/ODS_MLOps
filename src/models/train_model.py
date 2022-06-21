@@ -1,7 +1,7 @@
 import warnings
 import click
 
-# import mlflow
+import mlflow
 import json
 from collections import OrderedDict
 from itertools import chain
@@ -24,6 +24,7 @@ random.seed(0)
 np.random.seed(0)
 torch.manual_seed(0)
 torch.cuda.manual_seed_all(0)
+mlflow.set_experiment('intents_cnn')
 
 
 def get_ft_embedding(txt, ft, max_len):
@@ -72,9 +73,9 @@ def evaluate(data, model, criterion, device, batch_size):
     )
 
     return {
-        "accuracy": "{:<6.4f}".format(accuracy),
-        "f1": "{:<6.4f}".format(f1),
-        "loss": "{:<6.4f}".format(total_loss / len(data)),
+        "accuracy": accuracy,
+        "f1": f1,
+        "loss": float(total_loss / len(data)),
     }
 
 
@@ -374,9 +375,12 @@ def train_pipeline(
 
     model.eval()
     with open(metrics_path, "w") as f:
-        metrics = json.dumps(
-            evaluate(val_data, model, criterion, "cpu", batch_size))
+        metrics = evaluate(val_data, model, criterion, "cpu", batch_size)
+        mlflow.log_metrics(metrics)
+        metrics = {k: "{:<6.4f}".format(v) for (k, v) in metrics.items()}
+        metrics = json.dumps(metrics)
         f.write(metrics)
+    mlflow.log_artifact(model_path)
 
 
 if __name__ == "__main__":
