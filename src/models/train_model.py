@@ -1,10 +1,12 @@
 import warnings
 import click
-import mlflow
+
+# import mlflow
 import json
 from collections import OrderedDict
 from itertools import chain
-import time
+
+# import time
 import random
 import numpy as np
 import pandas as pd
@@ -16,7 +18,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import compress_fasttext
 from nltk.tokenize import word_tokenize
-
 
 warnings.filterwarnings("ignore")
 random.seed(0)
@@ -124,7 +125,8 @@ class EarlyStopping:
     Identify whether metric has not been improved for certain number of epochs
     """
 
-    def __init__(self, mode: str = "min", min_delta: float = 0, patience: int = 20):
+    def __init__(self, mode: str = "min", min_delta: float = 0,
+                 patience: int = 20):
         self.mode = mode
         self.min_delta = min_delta
         self.patience = patience
@@ -182,28 +184,33 @@ class CNNTextClassifier(nn.Module):
     """
 
     def __init__(
-        self,
-        num_classes,
-        embed_dim,
-        filters=(600,),
-        kernel_sizes=(4,),
-        pooling_dropout=0.8,
-        dense_sizes=(1000,),
-        dense_dropout=0.8,
-        **kwargs
+            self,
+            num_classes,
+            embed_dim,
+            filters=(600,),
+            kernel_sizes=(4,),
+            pooling_dropout=0.8,
+            dense_sizes=(1000,),
+            dense_dropout=0.8,
+            **kwargs
     ):
         """
         :param num_classes: number of outputs (classes)
         :param word_to_id: dictionary used to compose lookup table
-        :param use_pretrained_word_vectors: whether to use pre-trained word vectors
-        :param word_vectors_path: path to word vectors file (should be in compatible format)
+        :param use_pretrained_word_vectors: whether to use pre-trained
+        embeddings
+        :param word_vectors_path: path to word vectors file (should be in
+        compatible format)
         :param trainable_word_vectors: whether to train (change) vectors
-        :param embed_dim: embedding dimensionality in case of `use_pretrained_word_vectors=False`
-        :param filters: number of filters (output channels) for each kernel size of the 1st CNN layer
+        :param embed_dim: embedding dimensionality in case of
+        `use_pretrained_word_vectors=False`
+        :param filters: number of filters (output channels) for each kernel
+        size of the 1st CNN layer
         :param kernel_sizes: kernel sizes of the 1st CNN layer
         :param pooling_dropout: dropout coefficient after pooling layer
         :param dense_sizes: sizes of fully-connected layers
-        :param dense_dropout: dropout coefficient after each fully-connected layer
+        :param dense_dropout: dropout coefficient after each fully-connected
+        layer
         :param kwargs: ignored arguments
         """
         super().__init__()
@@ -217,7 +224,8 @@ class CNNTextClassifier(nn.Module):
                             ("conv0_{}_bn".format(k), nn.BatchNorm1d(f)),
                             ("conv0_{}_relu".format(k), nn.ReLU()),
                             ("conv0_{}_pool".format(k), GlobalMaxPooling()),
-                            ("conv0_{}_dp".format(k), nn.Dropout(pooling_dropout)),
+                            ("conv0_{}_dp".format(k),
+                             nn.Dropout(pooling_dropout)),
                         ]
                     )
                 )
@@ -235,7 +243,8 @@ class CNNTextClassifier(nn.Module):
                                 "fc{}".format(i),
                                 nn.Linear(dense_sizes_in[i], dense_sizes[i]),
                             ),
-                            ("fc{}_bn".format(i), nn.BatchNorm1d(dense_sizes[i])),
+                            ("fc{}_bn".format(i),
+                             nn.BatchNorm1d(dense_sizes[i])),
                             ("fc{}_relu".format(i), nn.ReLU(inplace=True)),
                             ("fc{}_dp".format(i), nn.Dropout(dense_dropout)),
                         ]
@@ -247,7 +256,8 @@ class CNNTextClassifier(nn.Module):
         self.fc_last = nn.Linear(dense_sizes[-1], num_classes)
 
     def forward(self, x):
-        # Conv1d takes in (batch, channels, seq_len), but raw embedded is (batch, seq_len, channels)
+        # Conv1d takes in (batch, channels, seq_len),
+        # but raw embedded is (batch, seq_len, channels)
         x = self.convs0(x.permute(0, 2, 1))
         x = self.fcs(x)
         x = self.fc_last(x)
@@ -262,12 +272,12 @@ class CNNTextClassifier(nn.Module):
 @click.argument("metrics_path", type=click.Path())
 @click.argument("ft_path", type=click.Path())
 def train_pipeline(
-    train_path: str,
-    valid_path: str,
-    model_path: str,
-    intents_path: str,
-    metrics_path: str,
-    ft_path: str,
+        train_path: str,
+        valid_path: str,
+        model_path: str,
+        intents_path: str,
+        metrics_path: str,
+        ft_path: str,
 ):
     ft = compress_fasttext.models.CompressedFastTextKeyedVectors.load(ft_path)
     embed_dim = ft.vector_size
@@ -292,7 +302,8 @@ def train_pipeline(
     train_data = TensorDataset(
         torch.FloatTensor(X_train_encoded), torch.FloatTensor(y_train)
     )
-    val_data = TensorDataset(torch.FloatTensor(X_val_encoded), torch.FloatTensor(y_val))
+    val_data = TensorDataset(torch.FloatTensor(X_val_encoded),
+                             torch.FloatTensor(y_val))
 
     batch_size = 128
     device = "cpu"
@@ -341,30 +352,18 @@ def train_pipeline(
 
             optimizer.step()
 
-        train_metrics = evaluate(train_data, model, criterion, device, batch_size)
-        val_metrics = evaluate(val_data, model, criterion, device, batch_size)
+        train_metrics = evaluate(
+            train_data, model, criterion, device, batch_size
+        )
+        val_metrics = evaluate(
+            val_data, model, criterion, device, batch_size
+        )
 
         if val_metrics["f1_val"] > best_valid_f1:
             best_valid_f1 = val_metrics["f1_val"]
             torch.save(model.state_dict(), model_path)
 
         scheduler.step(val_metrics["f1_val"])
-
-        print(
-            "Epoch {:3}, {}, {}, {}".format(
-                epoch + 1,
-                time.ctime(),
-                " ".join(
-                    [
-                        "train_{}: {:<6.4f}".format(k, v)
-                        for k, v in train_metrics.items()
-                    ]
-                ),
-                " ".join(
-                    ["val_{}: {:<6.4f}".format(k, v) for k, v in val_metrics.items()]
-                ),
-            )
-        )
 
         if early_stopping.step(val_metrics["f1_val"]):
             break
@@ -375,7 +374,8 @@ def train_pipeline(
 
     model.eval()
     with open(metrics_path, "w") as f:
-        metrics = json.dumps(evaluate(val_data, model, criterion, "cpu", batch_size))
+        metrics = json.dumps(
+            evaluate(val_data, model, criterion, "cpu", batch_size))
         f.write(metrics)
 
 
