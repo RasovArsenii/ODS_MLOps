@@ -18,7 +18,7 @@ import compress_fasttext
 from nltk.tokenize import word_tokenize
 
 
-warnings.filterwarnings('ignore')
+warnings.filterwarnings("ignore")
 random.seed(0)
 np.random.seed(0)
 torch.manual_seed(0)
@@ -26,13 +26,13 @@ torch.cuda.manual_seed_all(0)
 
 
 def get_ft_embedding(txt, ft, max_len):
-    tokens = word_tokenize(txt, language='russian')
+    tokens = word_tokenize(txt, language="russian")
 
     if len(tokens) > max_len:
         tokens = tokens[:max_len]
 
     else:
-        tokens = ['<PAD>'] * (max_len - len(tokens)) + tokens
+        tokens = ["<PAD>"] * (max_len - len(tokens)) + tokens
 
     return np.stack(map(ft.get_vector, tokens))
 
@@ -41,7 +41,7 @@ def evaluate(data, model, criterion, device, batch_size):
     """
     Evaluation, return accuracy and loss
     """
-    total_loss = 0.
+    total_loss = 0.0
     y_true = []
     y_pred = []
 
@@ -53,18 +53,27 @@ def evaluate(data, model, criterion, device, batch_size):
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
             output = model(x_batch)
             total_loss += criterion(output, y_batch)
-            y_pred.extend(sigmoid(output).cpu().numpy())  # don't forget to execute sigmoid function on logits
+            y_pred.extend(
+                sigmoid(output).cpu().numpy()
+            )  # don't forget to execute sigmoid function on logits
             y_true.extend(y_batch.cpu().numpy())
     y_true = np.asarray(y_true, dtype=np.uint8)
     y_pred = np.asarray(y_pred)
     # finding the best threshold with highest f1 score
-    accuracy = skm.f1_score(np.argmax(y_true, axis=1), np.argmax(y_pred, axis=1), average='micro')
-    f1 = skm.f1_score(np.argmax(y_true, axis=1), np.argmax(y_pred, axis=1), average='macro', zero_division=1)
+    accuracy = skm.f1_score(
+        np.argmax(y_true, axis=1), np.argmax(y_pred, axis=1), average="micro"
+    )
+    f1 = skm.f1_score(
+        np.argmax(y_true, axis=1),
+        np.argmax(y_pred, axis=1),
+        average="macro",
+        zero_division=1,
+    )
 
     return {
-        'accuracy': '{:<6.4f}'.format(accuracy),
-        'f1': '{:<6.4f}'.format(f1),
-        'loss': '{:<6.4f}'.format(total_loss / len(data))
+        "accuracy": "{:<6.4f}".format(accuracy),
+        "f1": "{:<6.4f}".format(f1),
+        "loss": "{:<6.4f}".format(total_loss / len(data)),
     }
 
 
@@ -81,7 +90,9 @@ def predict_proba(data, model, device, batch_size):
         for x_batch, y_batch in data_loader:
             x_batch = x_batch.to(device)
             output = model(x_batch)
-            y_pred.extend(softmax(output).cpu().numpy())  # don't forget to execute sigmoid function on logits
+            y_pred.extend(
+                softmax(output).cpu().numpy()
+            )  # don't forget to execute sigmoid function on logits
     y_pred = np.asarray(y_pred)
     return y_pred
 
@@ -90,6 +101,7 @@ class ModuleParallel(nn.Module):
     """
     Execute multiple modules on the same input and concatenate the results
     """
+
     def __init__(self, modules: list, axis=1):
         super().__init__()
         self.modules_ = nn.ModuleList(modules)
@@ -112,10 +124,7 @@ class EarlyStopping:
     Identify whether metric has not been improved for certain number of epochs
     """
 
-    def __init__(self,
-                 mode: str = 'min',
-                 min_delta: float = 0,
-                 patience: int = 20):
+    def __init__(self, mode: str = "min", min_delta: float = 0, patience: int = 20):
         self.mode = mode
         self.min_delta = min_delta
         self.patience = patience
@@ -156,11 +165,11 @@ class EarlyStopping:
             return False
 
     def _init_is_better(self, mode, min_delta):
-        if mode not in {'min', 'max'}:
-            raise ValueError('mode ' + mode + ' is unknown!')
-        if mode == 'min':
+        if mode not in {"min", "max"}:
+            raise ValueError("mode " + mode + " is unknown!")
+        if mode == "min":
             self.is_better = lambda value, best: value < best - min_delta
-        if mode == 'max':
+        if mode == "max":
             self.is_better = lambda value, best: value > best + min_delta
 
 
@@ -172,15 +181,17 @@ class CNNTextClassifier(nn.Module):
      because loss is not specified
     """
 
-    def __init__(self,
-                 num_classes,
-                 embed_dim,
-                 filters=(600,),
-                 kernel_sizes=(4,),
-                 pooling_dropout=0.8,
-                 dense_sizes=(1000,),
-                 dense_dropout=0.8,
-                 **kwargs):
+    def __init__(
+        self,
+        num_classes,
+        embed_dim,
+        filters=(600,),
+        kernel_sizes=(4,),
+        pooling_dropout=0.8,
+        dense_sizes=(1000,),
+        dense_dropout=0.8,
+        **kwargs
+    ):
         """
         :param num_classes: number of outputs (classes)
         :param word_to_id: dictionary used to compose lookup table
@@ -197,26 +208,42 @@ class CNNTextClassifier(nn.Module):
         """
         super().__init__()
 
-        self.convs0 = ModuleParallel([
-            nn.Sequential(OrderedDict([
-                ('conv0_{}'.format(k), nn.Conv1d(embed_dim, f, k)),
-                ('conv0_{}_bn'.format(k), nn.BatchNorm1d(f)),
-                ('conv0_{}_relu'.format(k), nn.ReLU()),
-                ('conv0_{}_pool'.format(k), GlobalMaxPooling()),
-                ('conv0_{}_dp'.format(k), nn.Dropout(pooling_dropout)),
-            ]))
-            for k, f in zip(kernel_sizes, filters)
-        ])
+        self.convs0 = ModuleParallel(
+            [
+                nn.Sequential(
+                    OrderedDict(
+                        [
+                            ("conv0_{}".format(k), nn.Conv1d(embed_dim, f, k)),
+                            ("conv0_{}_bn".format(k), nn.BatchNorm1d(f)),
+                            ("conv0_{}_relu".format(k), nn.ReLU()),
+                            ("conv0_{}_pool".format(k), GlobalMaxPooling()),
+                            ("conv0_{}_dp".format(k), nn.Dropout(pooling_dropout)),
+                        ]
+                    )
+                )
+                for k, f in zip(kernel_sizes, filters)
+            ]
+        )
 
         dense_sizes_in = [sum(filters)] + list(dense_sizes)[:-1]
-        self.fcs = nn.Sequential(OrderedDict(chain(*[
-            [
-                ('fc{}'.format(i), nn.Linear(dense_sizes_in[i], dense_sizes[i])),
-                ('fc{}_bn'.format(i), nn.BatchNorm1d(dense_sizes[i])),
-                ('fc{}_relu'.format(i), nn.ReLU(inplace=True)),
-                ('fc{}_dp'.format(i), nn.Dropout(dense_dropout))
-            ] for i in range(len(dense_sizes))
-        ])))
+        self.fcs = nn.Sequential(
+            OrderedDict(
+                chain(
+                    *[
+                        [
+                            (
+                                "fc{}".format(i),
+                                nn.Linear(dense_sizes_in[i], dense_sizes[i]),
+                            ),
+                            ("fc{}_bn".format(i), nn.BatchNorm1d(dense_sizes[i])),
+                            ("fc{}_relu".format(i), nn.ReLU(inplace=True)),
+                            ("fc{}_dp".format(i), nn.Dropout(dense_dropout)),
+                        ]
+                        for i in range(len(dense_sizes))
+                    ]
+                )
+            )
+        )
         self.fc_last = nn.Linear(dense_sizes[-1], num_classes)
 
     def forward(self, x):
@@ -235,12 +262,12 @@ class CNNTextClassifier(nn.Module):
 @click.argument("metrics_path", type=click.Path())
 @click.argument("ft_path", type=click.Path())
 def train_pipeline(
-        train_path: str,
-        valid_path: str,
-        model_path: str,
-        intents_path: str,
-        metrics_path: str,
-        ft_path: str,
+    train_path: str,
+    valid_path: str,
+    model_path: str,
+    intents_path: str,
+    metrics_path: str,
+    ft_path: str,
 ):
     ft = compress_fasttext.models.CompressedFastTextKeyedVectors.load(ft_path)
     embed_dim = ft.vector_size
@@ -255,14 +282,20 @@ def train_pipeline(
     y_train = lb.transform(train["intent"].values)
     y_val = lb.transform(valid["intent"].values)
 
-    X_train_encoded = np.stack(train["text"].apply(lambda x: get_ft_embedding(x, ft, max_len)))
-    X_val_encoded = np.stack(valid["text"].apply(lambda x: get_ft_embedding(x, ft, max_len)))
+    X_train_encoded = np.stack(
+        train["text"].apply(lambda x: get_ft_embedding(x, ft, max_len))
+    )
+    X_val_encoded = np.stack(
+        valid["text"].apply(lambda x: get_ft_embedding(x, ft, max_len))
+    )
 
-    train_data = TensorDataset(torch.FloatTensor(X_train_encoded), torch.FloatTensor(y_train))
+    train_data = TensorDataset(
+        torch.FloatTensor(X_train_encoded), torch.FloatTensor(y_train)
+    )
     val_data = TensorDataset(torch.FloatTensor(X_val_encoded), torch.FloatTensor(y_val))
 
     batch_size = 128
-    device = 'cpu'
+    device = "cpu"
     model = CNNTextClassifier(
         num_classes=y_train.shape[1],
         embed_dim=embed_dim,
@@ -271,27 +304,28 @@ def train_pipeline(
         dense_sizes=[200],
         pooling_dropout=0.45,
         dense_dropout=0.45,
-        trainable_word_vectors=False
+        trainable_word_vectors=False,
     )
 
     optimizer = optim.Adam(
-        [p for p in model.parameters() if p.requires_grad],
-        lr=0.00035
+        [p for p in model.parameters() if p.requires_grad], lr=0.00035
     )
-    criterion = nn.BCEWithLogitsLoss(reduction='sum')   # sigmoid
+    criterion = nn.BCEWithLogitsLoss(reduction="sum")  # sigmoid
     scheduler = optim.lr_scheduler.CyclicLR(
         optimizer,
         base_lr=0.00035,
         max_lr=0.015,
-        mode='triangular2',
-        cycle_momentum=False
+        mode="triangular2",
+        cycle_momentum=False,
     )
-    early_stopping = EarlyStopping(mode='max', patience=10)
+    early_stopping = EarlyStopping(mode="max", patience=10)
     best_valid_f1 = 0
 
     for epoch in range(0):
         model.train()
-        train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=True)
+        train_loader = DataLoader(
+            train_data, batch_size=batch_size, shuffle=True, drop_last=True
+        )
 
         for idx, (x_batch, y_batch) in enumerate(train_loader):
             x_batch, y_batch = x_batch.to(device), y_batch.to(device)
@@ -301,34 +335,47 @@ def train_pipeline(
             loss.backward()
 
             # clipping gradients
-            torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], 1)
+            torch.nn.utils.clip_grad_norm_(
+                [p for p in model.parameters() if p.requires_grad], 1
+            )
 
             optimizer.step()
 
         train_metrics = evaluate(train_data, model, criterion, device, batch_size)
         val_metrics = evaluate(val_data, model, criterion, device, batch_size)
 
-        if val_metrics['f1_val'] > best_valid_f1:
-            best_valid_f1 = val_metrics['f1_val']
+        if val_metrics["f1_val"] > best_valid_f1:
+            best_valid_f1 = val_metrics["f1_val"]
             torch.save(model.state_dict(), model_path)
 
-        scheduler.step(val_metrics['f1_val'])
+        scheduler.step(val_metrics["f1_val"])
 
-        print('Epoch {:3}, {}, {}, {}'
-              .format(epoch + 1, time.ctime(),
-                      ' '.join(['train_{}: {:<6.4f}'.format(k, v) for k, v in train_metrics.items()]),
-                      ' '.join(['val_{}: {:<6.4f}'.format(k, v) for k, v in val_metrics.items()])))
+        print(
+            "Epoch {:3}, {}, {}, {}".format(
+                epoch + 1,
+                time.ctime(),
+                " ".join(
+                    [
+                        "train_{}: {:<6.4f}".format(k, v)
+                        for k, v in train_metrics.items()
+                    ]
+                ),
+                " ".join(
+                    ["val_{}: {:<6.4f}".format(k, v) for k, v in val_metrics.items()]
+                ),
+            )
+        )
 
-        if early_stopping.step(val_metrics['f1_val']):
+        if early_stopping.step(val_metrics["f1_val"]):
             break
 
     torch.save(model.state_dict(), model_path)
-    with open(intents_path, 'w') as f:
-        f.write(';'.join(lb.classes_))
+    with open(intents_path, "w") as f:
+        f.write(";".join(lb.classes_))
 
     model.eval()
-    with open(metrics_path, 'w') as f:
-        metrics = json.dumps(evaluate(val_data, model, criterion, 'cpu', batch_size))
+    with open(metrics_path, "w") as f:
+        metrics = json.dumps(evaluate(val_data, model, criterion, "cpu", batch_size))
         f.write(metrics)
 
 
