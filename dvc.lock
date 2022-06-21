@@ -1,0 +1,81 @@
+schema: '2.0'
+stages:
+  cleaning:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/data.csv' 'data/processed/data_cleaned.csv'
+    deps:
+    - path: data/raw/data.csv
+      md5: 8b306fc266240a1d0d4d1d9c393f8a5a
+      size: 1255588
+    - path: src/data/handle_symbols.py
+      md5: 2da1dd886e6db6abbf0c023bb2b64057
+      size: 5865
+    outs:
+    - path: data/processed/data_cleaned.csv
+      md5: a465d63b5e25e492d48abcaab1395342
+      size: 1218890
+  cleaning train:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/train_88-6-6.xlsx' 'data/processed/train_cleaned.csv'
+    deps:
+    - path: data/raw/train_88-6-6.xlsx
+      md5: 9bdfbb0591b15dc596e5e11533e31a42
+      size: 6012486
+    - path: src/data/handle_symbols.py
+      md5: 7cd4a9351c35272ab175562657796d53
+      size: 6103
+    outs:
+    - path: data/processed/train_cleaned.csv
+      md5: 1074981a0665e6e3211378876d3056e6
+      size: 16767224
+  cleaning test:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/validate_88-6-6.xlsx' 'data/processed/valid_cleaned.csv'
+    deps:
+    - path: data/raw/validate_88-6-6.xlsx
+      md5: 526df455bdedbb1ec38ea49d583aae03
+      size: 469965
+    - path: src/data/handle_symbols.py
+      md5: 7cd4a9351c35272ab175562657796d53
+      size: 6103
+    outs:
+    - path: data/processed/valid_cleaned.csv
+      md5: 1b09bfb008e4b93673481b5d4ddef297
+      size: 1168474
+  cleaning valid:
+    cmd: python 'src/data/handle_symbols.py' 'data/raw/validate_88-6-6.xlsx' 'data/processed/valid_cleaned.csv'
+    deps:
+    - path: data/raw/validate_88-6-6.xlsx
+      md5: 526df455bdedbb1ec38ea49d583aae03
+      size: 469965
+    - path: src/data/handle_symbols.py
+      md5: 7cd4a9351c35272ab175562657796d53
+      size: 6103
+    outs:
+    - path: data/processed/valid_cleaned.csv
+      md5: 1b09bfb008e4b93673481b5d4ddef297
+      size: 1168474
+  train model:
+    cmd: python 'src/models/train_model.py' 'data/processed/train_cleaned.csv' 'data/processed/valid_cleaned.csv'
+      'models/intents_cnn.pt' 'data/processed/intents.txt' 'data/processed/metrics.json'
+      'models/compressed_ft_native_300_ru_twitter_nltk_word_tokenize.bin'
+    deps:
+    - path: data/processed/train_cleaned.csv
+      md5: 1074981a0665e6e3211378876d3056e6
+      size: 16767224
+    - path: data/processed/valid_cleaned.csv
+      md5: 1b09bfb008e4b93673481b5d4ddef297
+      size: 1168474
+    - path: models/compressed_ft_native_300_ru_twitter_nltk_word_tokenize.bin
+      md5: 60dbf93c1c9c9dd5b2dd1f2b2a86ec00
+      size: 37915960
+    - path: src/models/train_model.py
+      md5: 8d3f36360e6b83d21d44f93e20531759
+      size: 11280
+    outs:
+    - path: data/processed/intents.txt
+      md5: 3073bd3b8e33cb98deac55df1a8ca451
+      size: 5926
+    - path: data/processed/metrics.json
+      md5: a2dd56ee6d5f578ebd35625ffa5f3f49
+      size: 58
+    - path: models/intents_cnn.pt
+      md5: 9d9785c24f63a497aad59314ff2c0643
+      size: 231392

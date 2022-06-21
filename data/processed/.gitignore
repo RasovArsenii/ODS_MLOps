@@ -1,1 +1,5 @@
 /data_cleaned.csv
+/train_cleaned.csv
+/valid_cleaned.csv
+/intents.txt
+/metrics.json

@@ -165,9 +165,12 @@ def handle(text: str, do_sentiment: Optional[bool] = True) -> str:
 @click.argument("input_path", type=click.Path())
 @click.argument("output_path", type=click.Path())
 def handle_df(input_path: str, output_path: str):
-    df = pd.read_csv(input_path)
+    df = pd.read_excel(input_path, engine='openpyxl')
+    if 'phrases' in df.columns or 'phrase' in df.columns:
+        df.rename({'phrases': 'text'}, axis=1, inplace=True)
+        df.rename({'phrase': 'text'}, axis=1, inplace=True)
     df["text"] = df.text.apply(handle)
-    df.to_csv(output_path, index=None)
+    df[['text', 'intent']].drop_duplicates().to_csv(output_path, index=None)
 
 
 if __name__ == "__main__":
